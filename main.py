@@ -1,228 +1,198 @@
+# --- Your existing imports remain unchanged ---
 import streamlit as st
 from streamlit_option_menu import option_menu
-import pickle
 import warnings
+import numpy as np
 import pandas as pd
 import plotly.express as px
+import joblib
+import os
 from io import StringIO
 import requests
-
 from codebase.dashboard_graphs import MaternalHealthDashboard
+import cohere
 
-maternal_model = pickle.load(open("model/finalized_maternal_model.sav",'rb'))
-fetal_model = pickle.load(open("model/fetal_health_classifier.sav",'rb'))
+# --- File Paths ---
+model_path = r"C:\Users\Madhvi\OneDrive\Desktop\pragati_hackathon_pregnancy_risk_prediction\model\maternal_risk_model.pkl"
+scaler_path = r"C:\Users\Madhvi\OneDrive\Desktop\pragati_hackathon_pregnancy_risk_prediction\model\scaler.pkl"
+label_path = r"C:\Users\Madhvi\OneDrive\Desktop\pragati_hackathon_pregnancy_risk_prediction\model\label_encoder.pkl"
 
-# sidebar for navigation
+fetal_model = joblib.load(open("model\\fetal_health_model.pkl", 'rb'))
+scaler_f = joblib.load(open("model\\fetal_scaler.pkl", 'rb'))
+
+# --- Load Maternal Model Assets ---
+maternal_model = joblib.load(open(model_path, 'rb'))
+scaler = joblib.load(open(scaler_path, 'rb'))
+label_encoder = joblib.load(open(label_path, 'rb'))
+
+# --- Sidebar Menu ---
 with st.sidebar:
-    st.title("MedPredict")
-    st.write("Welcome to the MedPredict")
-    st.write(" Choose an option from the menu below to get started:")
+    st.title("💙 MedPredict")
+    selected = option_menu(
+        'MedPredict',
+        ['About us', 'Pregnancy Risk Prediction', 'Fetal Health Prediction', 'Dashboard'],
+        icons=['chat-square-text', 'heart-pulse', 'baby', 'bar-chart-line'],
+        default_index=0
+    )
 
-    selected = option_menu('MedPredict',
-                          
-                          ['About us',
-                            'Pregnancy Risk Prediction',
-                           'Fetal Health Prediction',
-                           'Dashboard'],
-                          icons=['chat-square-text','hospital','capsule-pill','clipboard-data'],
-                          default_index=0)
-    
-if (selected == 'About us'):
-    
-    st.title("Welcome to MedPredict")
-    st.write("At MedPredict, our mission is to revolutionize healthcare by offering innovative solutions through predictive analysis. "
-         "Our platform is specifically designed to address the intricate aspects of maternal and fetal health, providing accurate "
-         "predictions and proactive risk management.")
-    
-    col1, col2= st.columns(2)
-    with col1:
-        # Section 1: Pregnancy Risk Prediction
-        st.header("1. Pregnancy Risk Prediction")
-        st.write("Our Pregnancy Risk Prediction feature utilizes advanced algorithms to analyze various parameters, including age, "
-                "body sugar levels, blood pressure, and more. By processing this information, we provide accurate predictions of "
-                "potential risks during pregnancy.")
-        # Add an image for Pregnancy Risk Prediction
-        st.image("graphics/pregnancy_risk_image.jpg", caption="Pregnancy Risk Prediction", use_column_width=True)
-    with col2:
-        # Section 2: Fetal Health Prediction
-        st.header("2. Fetal Health Prediction")
-        st.write("Fetal Health Prediction is a crucial aspect of our system. We leverage cutting-edge technology to assess the "
-                "health status of the fetus. Through a comprehensive analysis of factors such as ultrasound data, maternal health, "
-                "and genetic factors, we deliver insights into the well-being of the unborn child.")
-        # Add an image for Fetal Health Prediction
-        st.image("graphics/fetal_health_image.jpg", caption="Fetal Health Prediction", use_column_width=True)
+# --- About Us Page ---
+if selected == 'About us':
+    st.markdown("<h1 style='text-align: center; color: #6C63FF;'>🌟 Welcome to <em>MedPredict</em> 🌟</h1>", unsafe_allow_html=True)
+    st.markdown("""
+    <div style='text-align: center; font-size:18px;'>
+        <p>Empowering maternal and fetal healthcare through AI-driven predictive solutions.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("---")
+    col1, col2 = st.columns(2)
 
-    # Section 3: Dashboard
-    st.header("3. Dashboard")
-    st.write("Our Dashboard provides a user-friendly interface for monitoring and managing health data. It offers a holistic "
-            "view of predictive analyses, allowing healthcare professionals and users to make informed decisions. The Dashboard "
-            "is designed for ease of use and accessibility.")
-    
-    # Closing note
-    st.write("Thank you for choosing E-Doctor. We are committed to advancing healthcare through technology and predictive analytics. "
-            "Feel free to explore our features and take advantage of the insights we provide.")
-
-if (selected == 'Pregnancy Risk Prediction'):
-    
-    # page title
-    st.title('Pregnancy Risk Prediction')
-    content = "Predicting the risk in pregnancy involves analyzing several parameters, including age, blood sugar levels, blood pressure, and other relevant factors. By evaluating these parameters, we can assess potential risks and make informed predictions regarding the pregnancy's health"
-    st.markdown(f"<div style='white-space: pre-wrap;'><b>{content}</b></div></br>", unsafe_allow_html=True)
-    
-    # getting the input data from the user
-    col1, col2, col3 = st.columns(3)
-    
     with col1:
-        age = st.text_input('Age of the Person', key = "age")
-        
-    with col2:
-        diastolicBP = st.text_input('diastolicBP in mmHg')
-    
-    with col3:
-        BS = st.text_input('Blood glucose in mmol/L')
-    
-    with col1:
-        bodyTemp = st.text_input('Body Temperature in Celsius')
+        st.markdown("### 🤰 Pregnancy Risk Prediction")
+        st.markdown("""
+        <ul>
+            <li>AI-powered maternal risk analysis.</li>
+            <li>Track key vitals: BP, glucose, temp, heart rate.</li>
+        </ul>
+        """, unsafe_allow_html=True)
+        st.image("graphics/pregnancy_risk_image.jpg", caption="Empowering Safe Pregnancies", use_container_width=True)
 
     with col2:
-        heartRate = st.text_input('Heart rate in beats per minute')
-    
-    riskLevel=""
-    predicted_risk = [0] 
-    # creating a button for Prediction
-    with col1:
-        if st.button('Predict Pregnancy Risk'):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                predicted_risk = maternal_model.predict([[age, diastolicBP, BS, bodyTemp, heartRate]])
-            # st
-            st.subheader("Risk Level:")
-            if predicted_risk[0] == 0:
-                st.markdown('<bold><p style="font-weight: bold; font-size: 20px; color: green;">Low Risk</p></bold>', unsafe_allow_html=True)
-            elif predicted_risk[0] == 1:
-                st.markdown('<bold><p style="font-weight: bold; font-size: 20px; color: orange;">Medium Risk</p></Bold>', unsafe_allow_html=True)
+        st.markdown("### 🍼 Fetal Health Prediction")
+        st.markdown("""
+        <ul>
+            <li>Interpretation of CTG data.</li>
+            <li>Classification: Normal / Suspect / Pathological.</li>
+        </ul>
+        """, unsafe_allow_html=True)
+        st.image("graphics/fetal_health_image.jpg", caption="AI-Assisted Healthy Beginnings", use_container_width=True)
+
+    # ChatBot only here
+    st.markdown("---")
+    st.markdown("### 🤖 Pregnancy AI ChatBot")
+    with st.expander("💬 Ask about maternal health"):
+        user_query = st.text_input("📝 Your Question:", placeholder="e.g., What is normal BP during pregnancy?")
+        if st.button("Ask"):
+            if user_query.strip():
+                with st.spinner("Thinking..."):
+                    try:
+                        co = cohere.Client("P439t9JWBvJhMi6RjwaPPaPI8NTj1zdQgM2yTg32")
+                        response = co.chat(
+                            message=user_query,
+                            preamble="You are a caring, knowledgeable assistant for maternal and fetal health.",
+                            temperature=0.5
+                        )
+                        st.success("🤖 " + response.text)
+                    except Exception as e:
+                        st.error(f"❌ Error: {e}")
             else:
-                st.markdown('<bold><p style="font-weight: bold; font-size: 20px; color: red;">High Risk</p><bold>', unsafe_allow_html=True)
-    with col2:
-        if st.button("Clear"): 
-            st.rerun()
+                st.warning("Please enter a question.")
 
-if (selected == 'Fetal Health Prediction'):
-    
-    # page title
-    st.title('Fetal Health Prediction')
-    
-    content = "Cardiotocograms (CTGs) are a simple and cost accessible option to assess fetal health, allowing healthcare professionals to take action in order to prevent child and maternal mortality"
-    st.markdown(f"<div style='white-space: pre-wrap;'><b>{content}</b></div></br>", unsafe_allow_html=True)
-    # getting the input data from the user
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        BaselineValue = st.text_input('Baseline Value')
-        
-    with col2:
-        Accelerations = st.text_input('Accelerations')
-    
-    with col3:
-        fetal_movement = st.text_input('Fetal Movement')
-    
-    with col1:
-        uterine_contractions = st.text_input('Uterine Contractions')
+# --- Pregnancy Risk Prediction Page ---
+if selected == 'Pregnancy Risk Prediction':
+    st.title(' Pregnancy Risk Prediction')
+    st.markdown("Predict potential pregnancy risks with simple input parameters.")
 
-    with col2:
-        light_decelerations = st.text_input('Light Decelerations')
-    
-    with col3:
-        severe_decelerations = st.text_input('Severe Decelerations')
+    with st.container():
+        st.markdown("#### 💡 Enter the following health parameters:")
+        col1, col2, col3 = st.columns(3)
 
-    with col1:
-        prolongued_decelerations = st.text_input('Prolongued Decelerations')
-        
-    with col2:
-        abnormal_short_term_variability = st.text_input('Abnormal Short Term Variability')
-    
-    with col3:
-        mean_value_of_short_term_variability = st.text_input('Mean Value Of Short Term Variability')
-    
-    with col1:
-        percentage_of_time_with_abnormal_long_term_variability = st.text_input('Percentage Of Time With ALTV')
+        with col1:
+            age = st.text_input('Age', key="age")
+        with col2:
+            systolicBP = st.text_input('Systolic BP (mmHg)', key="systolicBP")
+        with col3:
+            diastolicBP = st.text_input('Diastolic BP (mmHg)', key="diastolicBP")
 
-    with col2:
-        mean_value_of_long_term_variability = st.text_input('Mean Value Long Term Variability')
-    
-    with col3:
-        histogram_width = st.text_input('Histogram Width')
+        with col1:
+            BS = st.text_input('Blood Glucose (mmol/L)')
+        with col2:
+            bodyTemp = st.text_input('Body Temperature (°C)')
+        with col3:
+            heartRate = st.text_input('Heart Rate (bpm)')
 
-    with col1:
-        histogram_min = st.text_input('Histogram Min')
-        
-    with col2:
-        histogram_max = st.text_input('Histogram Max')
-    
-    with col3:
-        histogram_number_of_peaks = st.text_input('Histogram Number Of Peaks')
-    
-    with col1:
-        histogram_number_of_zeroes = st.text_input('Histogram Number Of Zeroes')
+    def predict_risk(input_data):
+        input_array = np.array(input_data, dtype=float).reshape(1, -1)
+        input_array = scaler.transform(input_array)
+        prediction = maternal_model.predict(input_array)
+        return label_encoder.inverse_transform(prediction)[0]
 
-    with col2:
-        histogram_mode = st.text_input('Histogram Mode')
-    
-    with col3:
-        histogram_mean = st.text_input('Histogram Mean')
-    
-    with col1:
-        histogram_median = st.text_input('Histogram Median')
+    if st.button('🔍 Predict Pregnancy Risk'):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                predicted_risk = predict_risk([age, systolicBP, diastolicBP, BS, bodyTemp, heartRate])
+                if predicted_risk == "low risk":
+                    st.success("🟢 Low Risk")
+                elif predicted_risk == "mid risk":
+                    st.warning("🟠 Medium Risk")
+                else:
+                    st.error("🔴 High Risk")
+            except Exception as e:
+                st.error(f"Prediction error: {e}")
 
-    with col2:
-        histogram_variance = st.text_input('Histogram Variance')
-    
-    with col3:
-        histogram_tendency = st.text_input('Histogram Tendency')
-    
-    # creating a button for Prediction
-    st.markdown('</br>', unsafe_allow_html=True)
-    with col1:
-        if st.button('Predict Pregnancy Risk'):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                predicted_risk = fetal_model.predict([[BaselineValue, Accelerations, fetal_movement,
-       uterine_contractions, light_decelerations, severe_decelerations,
-       prolongued_decelerations, abnormal_short_term_variability,
-       mean_value_of_short_term_variability,
-       percentage_of_time_with_abnormal_long_term_variability,
-       mean_value_of_long_term_variability, histogram_width,
-       histogram_min, histogram_max, histogram_number_of_peaks,
-       histogram_number_of_zeroes, histogram_mode, histogram_mean,
-       histogram_median, histogram_variance, histogram_tendency]])
-            # st.subheader("Risk Level:")
-            st.markdown('</br>', unsafe_allow_html=True)
-            if predicted_risk[0] == 0:
-                st.markdown('<bold><p style="font-weight: bold; font-size: 20px; color: green;">Result  Comes to be  Normal</p></bold>', unsafe_allow_html=True)
-            elif predicted_risk[0] == 1:
-                st.markdown('<bold><p style="font-weight: bold; font-size: 20px; color: orange;">Result  Comes to be  Suspect</p></Bold>', unsafe_allow_html=True)
+    if st.button("🔁 Clear"):
+        st.experimental_rerun()
+
+# --- Fetal Health Prediction Page ---
+if selected == 'Fetal Health Prediction':
+    st.title('🩺 Fetal Health Prediction')
+    st.markdown("Enter CTG report values to assess fetal well-being.")
+
+    # Add CTG reference image
+    st.image("ctg_report.png", caption="📄 Sample CTG Report", width=400)
+
+    features = [
+        'Baseline Value', 'Accelerations', 'Fetal Movement', 'Uterine Contractions',
+        'Light Decelerations', 'Severe Decelerations', 'Prolonged Decelerations',
+        'Abnormal Short Term Variability', 'Mean Value Of Short Term Variability',
+        'Percentage Of Time With ALTV', 'Mean Value Long Term Variability',
+        'Histogram Width', 'Histogram Min', 'Histogram Max', 'Histogram Number Of Peaks',
+        'Histogram Number Of Zeroes', 'Histogram Mode', 'Histogram Mean',
+        'Histogram Median', 'Histogram Variance', 'Histogram Tendency'
+    ]
+
+    user_inputs = []
+    st.markdown("#### 🧾 Enter the CTG Parameters:")
+    for i in range(0, len(features), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            if i + j < len(features):
+                user_inputs.append(cols[j].text_input(features[i + j]))
+
+    if st.button('🔍 Predict Fetal Health'):
+        try:
+            input_array = np.array(user_inputs, dtype=float).reshape(1, -1)
+            input_array = scaler_f.transform(input_array)
+            predicted = fetal_model.predict(input_array)[0]
+
+            if predicted == 0:
+                st.success("🟢 Normal")
+            elif predicted == 1:
+                st.warning("🟠 Suspect")
             else:
-                st.markdown('<bold><p style="font-weight: bold; font-size: 20px; color: red;">Result  Comes to be  Pathological</p><bold>', unsafe_allow_html=True)
-    with col2:
-        if st.button("Clear"): 
-            st.rerun()
+                st.error("🔴 Pathological")
+        except Exception as e:
+            st.error(f"Error: {e}")
 
-if (selected == "Dashboard"):
+    if st.button("🔁 Clear"):
+        st.experimental_rerun()
+
+# --- Dashboard Page ---
+if selected == "Dashboard":
+    st.title("📊 Maternal Health Dashboard")
+    st.markdown("Explore visual insights across regions.")
+
     api_key = "579b464db66ec23bdd00000139b0d95a6ee4441c5f37eeae13f3a0b2"
-    api_endpoint = api_endpoint= f"https://api.data.gov.in/resource/6d6a373a-4529-43e0-9cff-f39aa8aa5957?api-key={api_key}&format=csv"
-    st.header("Dashboard")
-    content = "Our interactive dashboard offers a comprehensive visual representation of maternal health achievements across diverse regions. The featured chart provides insights into the performance of each region concerning institutional deliveries compared to their assessed needs. It serves as a dynamic tool for assessing healthcare effectiveness, allowing users to quickly gauge the success of maternal health initiatives."
-    st.markdown(f"<div style='white-space: pre-wrap;'><b>{content}</b></div></br>", unsafe_allow_html=True)
+    api_endpoint = f"https://api.data.gov.in/resource/6d6a373a-4529-43e0-9cff-f39aa8aa5957?api-key={api_key}&format=csv"
 
     dashboard = MaternalHealthDashboard(api_endpoint)
-    dashboard.create_bubble_chart()
-    with st.expander("Show More"):
-    # Display a portion of the data
-        content = dashboard.get_bubble_chart_data()
-        st.markdown(f"<div style='white-space: pre-wrap;'><b>{content}</b></div>", unsafe_allow_html=True)
 
+    st.markdown("### 🌐 Regional Bubble Chart")
+    dashboard.create_bubble_chart()
+    with st.expander("Show Bubble Data"):
+        st.markdown(f"<div style='white-space: pre-wrap;'>{dashboard.get_bubble_chart_data()}</div>", unsafe_allow_html=True)
+
+    st.markdown("### 🥧 Pregnancy Risk Pie Chart")
     dashboard.create_pie_chart()
-    with st.expander("Show More"):
-    # Display a portion of the data
-        content = dashboard.get_pie_graph_data()
-        st.markdown(f"<div style='white-space: pre-wrap;'><b>{content}</b></div>", unsafe_allow_html=True)
+    with st.expander("Show Pie Data"):
+        st.markdown(f"<div style='white-space: pre-wrap;'>{dashboard.get_pie_graph_data()}</div>", unsafe_allow_html=True)
