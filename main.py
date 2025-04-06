@@ -30,14 +30,14 @@ with st.sidebar:
     st.title("💙 MedPredict")
     selected = option_menu(
         'MedPredict',
-        ['About us', 'Pregnancy Risk Prediction', 'Fetal Health Prediction', 'Dashboard'],
-        icons=['chat-square-text', 'heart-pulse', 'baby', 'bar-chart-line'],
+        ['About us', 'Pregnancy Risk Prediction', '📄Fetal Health Prediction', 'Dashboard'],
+        icons=['chat-square-text', 'heart-pulse',' ', 'bar-chart-line'],
         default_index=0
     )
 
 # --- About Us Page ---
 if selected == 'About us':
-    st.markdown("<h1 style='text-align: center; color: #6C63FF;'>🌟 Welcome to <em>MedPredict</em> 🌟</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #6C63FF;'> Welcome to <em>MedPredict</em></h1>", unsafe_allow_html=True)
     st.markdown("""
     <div style='text-align: center; font-size:18px;'>
         <p>Empowering maternal and fetal healthcare through AI-driven predictive solutions.</p>
@@ -47,7 +47,7 @@ if selected == 'About us':
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 🤰 Pregnancy Risk Prediction")
+        st.markdown('<h3><img src="https://tse4.mm.bing.net/th?id=OIP.2PivYzvysBIObm7mT4NwbwHaHa&pid=Api&P=0&h=180" width="30" style="vertical-align: middle; margin-right: 10px;">Pregnancy Risk Prediction</h3>', unsafe_allow_html=True)
         st.markdown("""
         <ul>
             <li>AI-powered maternal risk analysis.</li>
@@ -57,7 +57,7 @@ if selected == 'About us':
         st.image("graphics/pregnancy_risk_image.jpg", caption="Empowering Safe Pregnancies", use_container_width=True)
 
     with col2:
-        st.markdown("### 🍼 Fetal Health Prediction")
+        st.markdown('<h3><img src="https://cdn-icons-png.flaticon.com/512/6322/6322022.png" width="30" style="vertical-align: middle; margin-right: 10px;">Fetal health Predictor</h3>', unsafe_allow_html=True)
         st.markdown("""
         <ul>
             <li>Interpretation of CTG data.</li>
@@ -68,7 +68,7 @@ if selected == 'About us':
 
     # ChatBot only here
     st.markdown("---")
-    st.markdown("### 🤖 Pregnancy AI ChatBot")
+    st.markdown('<h3><img src="https://tse1.mm.bing.net/th?id=OIP.87ZRkORvjBkzOuSeBZ0mrAHaHa&pid=Api&P=0&h=180" width="30" style="vertical-align: middle; margin-right: 10px;">Pregnancy AI Chat Bot </h3>', unsafe_allow_html=True)
     with st.expander("💬 Ask about maternal health"):
         user_query = st.text_input("📝 Your Question:", placeholder="e.g., What is normal BP during pregnancy?")
         if st.button("Ask"):
@@ -81,7 +81,7 @@ if selected == 'About us':
                             preamble="You are a caring, knowledgeable assistant for maternal and fetal health.",
                             temperature=0.5
                         )
-                        st.success("🤖 " + response.text)
+                        st.success(response.text)
                     except Exception as e:
                         st.error(f"❌ Error: {e}")
             else:
@@ -93,7 +93,7 @@ if selected == 'Pregnancy Risk Prediction':
     st.markdown("Predict potential pregnancy risks with simple input parameters.")
 
     with st.container():
-        st.markdown("#### 💡 Enter the following health parameters:")
+        st.markdown("####  Enter the following health parameters:")
         col1, col2, col3 = st.columns(3)
 
         with col1:
@@ -106,7 +106,7 @@ if selected == 'Pregnancy Risk Prediction':
         with col1:
             BS = st.text_input('Blood Glucose (mmol/L)')
         with col2:
-            bodyTemp = st.text_input('Body Temperature (°C)')
+            bodyTemp = st.text_input('Body Temperature (°F)')
         with col3:
             heartRate = st.text_input('Heart Rate (bpm)')
 
@@ -135,7 +135,7 @@ if selected == 'Pregnancy Risk Prediction':
 
 # --- Fetal Health Prediction Page ---
 if selected == 'Fetal Health Prediction':
-    st.title('🩺 Fetal Health Prediction')
+    st.title(' Fetal Health Prediction')
     st.markdown("Enter CTG report values to assess fetal well-being.")
 
     # Add CTG reference image
@@ -152,7 +152,7 @@ if selected == 'Fetal Health Prediction':
     ]
 
     user_inputs = []
-    st.markdown("#### 🧾 Enter the CTG Parameters:")
+    st.markdown("####  Enter the CTG Parameters:")
     for i in range(0, len(features), 3):
         cols = st.columns(3)
         for j in range(3):
@@ -187,12 +187,12 @@ if selected == "Dashboard":
 
     dashboard = MaternalHealthDashboard(api_endpoint)
 
-    st.markdown("### 🌐 Regional Bubble Chart")
+    st.markdown("### Regional Bubble Chart")
     dashboard.create_bubble_chart()
     with st.expander("Show Bubble Data"):
         st.markdown(f"<div style='white-space: pre-wrap;'>{dashboard.get_bubble_chart_data()}</div>", unsafe_allow_html=True)
 
-    st.markdown("### 🥧 Pregnancy Risk Pie Chart")
+    st.markdown("### Pregnancy Risk Pie Chart")
     dashboard.create_pie_chart()
     with st.expander("Show Pie Data"):
         st.markdown(f"<div style='white-space: pre-wrap;'>{dashboard.get_pie_graph_data()}</div>", unsafe_allow_html=True)

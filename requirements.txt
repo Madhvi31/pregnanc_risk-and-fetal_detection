@@ -70,7 +70,7 @@ pandas==2.1.4
 pillow==10.3.0
 plotly==5.18.0
 propcache==0.3.1
-protobuf==4.25.1
+protobuf==4.21.12
 pyarrow==19.0.1
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
@@ -99,7 +99,7 @@ streamlit==1.44.1
 streamlit-option-menu==0.4.0
 sympy==1.13.3
 tenacity==8.5.0
-tensorboard==2.11.2
+tensorboard==2.10.1
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
 tensorflow==2.11.0
